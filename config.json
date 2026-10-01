@@ -1,0 +1,30 @@
+{
+  "corporation_id": 98707560,
+  "start": "2026-10-01T00:00:00Z",
+  "end": "2026-11-01T00:00:00Z",
+  "tiers": [
+    {"marks": 200, "emoji": "🥉", "prize": "1 Marauder of choice"},
+    {"marks": 500, "emoji": "🥈", "prize": "1 Black Ops Battleship + 1 Cyno Cruiser"},
+    {"marks": 1000, "emoji": "🥇", "prize": "1 Revelation Dreadnought + 1 T1 Carrier of choice"}
+  ],
+  "pod_type_ids": [670, 33328],
+  "blue_alliances": [
+    99012654,
+    154104258,
+    99001317,
+    99005393,
+    99003581,
+    99013537,
+    99009129,
+    1727758877,
+    386292982,
+    99007203,
+    1042504553,
+    99002685,
+    498125261
+  ],
+  "blue_corporations": [],
+  "disqualified": [],
+  "adjustments": {},
+  "leaderboard_size": 50
+}
