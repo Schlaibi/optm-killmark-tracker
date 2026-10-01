@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="45%" r="60%">
+      <stop offset="0" stop-color="#3a0a0f"/>
+      <stop offset="0.55" stop-color="#16060a"/>
+      <stop offset="1" stop-color="#050306"/>
+    </radialGradient>
+    <radialGradient id="eye" cx="50%" cy="55%" r="55%">
+      <stop offset="0" stop-color="#ff5a3c"/>
+      <stop offset="0.35" stop-color="#e0161f"/>
+      <stop offset="1" stop-color="#2a0306"/>
+    </radialGradient>
+    <linearGradient id="bone" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4efe4"/>
+      <stop offset="1" stop-color="#c9bfae"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="9"/>
+    </filter>
+  </defs>
+
+  <!-- background (Discord crops to a circle) -->
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="236" fill="none" stroke="#b3121b" stroke-width="10" opacity="0.9"/>
+  <circle cx="256" cy="256" r="220" fill="none" stroke="#b3121b" stroke-width="2" opacity="0.45"/>
+
+  <!-- crossbones -->
+  <g fill="url(#bone)" stroke="#3a2a22" stroke-width="5">
+    <g transform="rotate(33 256 282)">
+      <rect x="54" y="266" width="404" height="32" rx="16"/>
+      <circle cx="56" cy="263" r="22"/><circle cx="56" cy="301" r="22"/>
+      <circle cx="456" cy="263" r="22"/><circle cx="456" cy="301" r="22"/>
+    </g>
+    <g transform="rotate(-33 256 282)">
+      <rect x="54" y="266" width="404" height="32" rx="16"/>
+      <circle cx="56" cy="263" r="22"/><circle cx="56" cy="301" r="22"/>
+      <circle cx="456" cy="263" r="22"/><circle cx="456" cy="301" r="22"/>
+    </g>
+  </g>
+
+  <!-- skull -->
+  <g stroke="#3a2a22" stroke-width="6" stroke-linejoin="round">
+    <path fill="url(#bone)" d="M256 92
+      C 172 92 128 150 128 214
+      C 128 258 148 286 178 300
+      L 182 336 Q 184 352 200 352 L 312 352 Q 328 352 330 336 L 334 300
+      C 364 286 384 258 384 214
+      C 384 150 340 92 256 92 Z"/>
+  </g>
+  <!-- eye glow -->
+  <g filter="url(#glow)" opacity="0.85">
+    <ellipse cx="208" cy="222" rx="38" ry="36" fill="#ff2a1a"/>
+    <ellipse cx="304" cy="222" rx="38" ry="36" fill="#ff2a1a"/>
+  </g>
+  <!-- eyes -->
+  <g stroke="#2a0a0c" stroke-width="4">
+    <path fill="url(#eye)" d="M172 214 Q 176 186 210 190 Q 244 196 242 228 Q 238 256 206 254 Q 172 250 172 214 Z"/>
+    <path fill="url(#eye)" d="M340 214 Q 336 186 302 190 Q 268 196 270 228 Q 274 256 306 254 Q 340 250 340 214 Z"/>
+  </g>
+  <!-- nose -->
+  <path d="M256 262 L 240 292 Q 256 300 272 292 Z" fill="#1c0709" stroke="#1c0709" stroke-width="4" stroke-linejoin="round"/>
+  <!-- teeth -->
+  <g stroke="#3a2a22" stroke-width="5" stroke-linecap="round">
+    <line x1="222" y1="318" x2="222" y2="348"/>
+    <line x1="244" y1="318" x2="244" y2="350"/>
+    <line x1="268" y1="318" x2="268" y2="350"/>
+    <line x1="290" y1="318" x2="290" y2="348"/>
+  </g>
+
+  <!-- killmark tally -->
+  <g fill="#e0161f">
+    <rect x="215" y="382" width="12" height="46" rx="3"/>
+    <rect x="238" y="382" width="12" height="46" rx="3"/>
+    <rect x="261" y="382" width="12" height="46" rx="3"/>
+    <rect x="284" y="382" width="12" height="46" rx="3"/>
+    <rect x="196" y="400" width="120" height="10" rx="4" transform="rotate(-20 256 405)"/>
+  </g>
+</svg>
