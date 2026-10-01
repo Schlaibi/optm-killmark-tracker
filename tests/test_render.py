@@ -6,7 +6,7 @@ from pathlib import Path
 
 from render import progress_line, render_csv, render_leaderboard, render_tier_up
 
-CONFIG = json.loads((Path(__file__).parent.parent / "config.json").read_text(encoding="utf-8"))
+CONFIG = json.loads((Path(__file__).parent / "config.json").read_text(encoding="utf-8"))
 TIERS = CONFIG["tiers"]
 NOW = datetime(2026, 10, 5, 18, 30, tzinfo=timezone.utc)
 
@@ -79,3 +79,8 @@ def test_csv_rows():
     assert len(rows) == 3
     assert rows[0] == ["rank", "character", "character_id", "killmarks", "tier", "zkill"]
     assert rows[1] == ["1", "Eight", "8", "250", "1", "https://zkillboard.com/character/8/"]
+
+
+def test_summary_shows_counted_mails():
+    desc = render_leaderboard({1: 5}, {1: "Alpha"}, CONFIG, NOW, mails=1234)["embeds"][0]["description"]
+    assert desc.splitlines()[0].startswith("**1** pilots · **1,234** mails · ")

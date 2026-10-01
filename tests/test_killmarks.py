@@ -4,10 +4,10 @@ from pathlib import Path
 
 import pytest
 
-from killmarks import count_killmarks, current_tier, detect_tier_ups, slim_killmail
+from killmarks import count_killmarks, count_mails, current_tier, detect_tier_ups, slim_killmail
 
 CORP = 98707560
-CONFIG = json.loads((Path(__file__).parent.parent / "config.json").read_text(encoding="utf-8"))
+CONFIG = json.loads((Path(__file__).parent / "config.json").read_text(encoding="utf-8"))
 TIERS = CONFIG["tiers"]
 
 _next_id = [1000]
@@ -111,3 +111,13 @@ def test_tier_up_reports_highest_only():
 
 def test_tier_up_new_char():
     assert detect_tier_ups({}, {3: 200}, TIERS) == [(3, 1)]
+
+
+def test_adjustment_values_written_as_text_still_work():
+    s = slims(make_km(attackers=[(20, CORP)]))
+    assert count_killmarks(s, config(adjustments={"20": "3"}, disqualified=["30"])) == {20: 4}
+
+
+def test_count_mails_counts_only_valid_mails():
+    s = slims(make_km(), make_km(victim_ship=670), make_km(victim_alli=99003581), make_km(attackers=[(10, CORP), (20, CORP)]))
+    assert count_mails(s, config()) == 2

@@ -1,4 +1,5 @@
 """HTTP clients for zKillboard, ESI and the Discord webhook."""
+import sys
 import time
 
 import requests
@@ -41,21 +42,28 @@ def _request(session, method, url, label, sleep, allow=(), **kwargs):
         raise requests.HTTPError(f"{label} failed: HTTP {resp.status_code}", response=resp)
 
 
-def fetch_new_killmails(session, corp_id, known_ids, sleep=time.sleep, max_pages=50):
-    """Full killmails from zKill not in `known_ids`, newest first."""
+def fetch_new_killmails(session, corp_id, known_ids, sleep=time.sleep, max_pages=100, full=False):
+    """Full killmails from zKill not in `known_ids`, newest first.
+
+    Normally stops at the first page with nothing new. `full` pages to the end, which
+    catches mails that reached zKill late and sort below already-known ones.
+    """
     new = []
     for page in range(1, max_pages + 1):
         if page > 1:
             sleep(1)
         url = ZKILL_URL.format(corp=corp_id, page=page)
         mails = _request(session, "GET", url, f"zKillboard page {page}", sleep).json() or []
+        if not mails:
+            return new
         fresh = [m for m in mails if str(m["killmail_id"]) not in known_ids]
         for m in fresh:
             if "attackers" not in m:
                 m.update(_esi_killmail(session, m, sleep))
         new.extend(fresh)
-        if not fresh:
-            break
+        if not fresh and not full:
+            return new
+    print(f"warning: stopped at max_pages={max_pages}; older mails may be missing", file=sys.stderr)
     return new
 
 
@@ -65,11 +73,24 @@ def _esi_killmail(session, mail, sleep):
 
 
 def resolve_names(session, char_ids, sleep=time.sleep):
+    """{id: name}. ESI rejects a whole batch over one bad ID, so on 404 retry IDs one by one and skip bad ones."""
     names = {}
     ids = sorted(set(char_ids))
     for i in range(0, len(ids), 1000):
-        resp = _request(session, "POST", ESI_NAMES_URL, "ESI names", sleep, json=ids[i:i + 1000])
-        names.update({entry["id"]: entry["name"] for entry in resp.json()})
+        names.update(_names(session, ids[i:i + 1000], sleep))
+    return names
+
+
+def _names(session, ids, sleep):
+    resp = _request(session, "POST", ESI_NAMES_URL, "ESI names", sleep, allow=(404,), json=ids)
+    if resp.status_code != 404:
+        return {entry["id"]: entry["name"] for entry in resp.json()}
+    if len(ids) == 1:
+        print(f"warning: ESI doesn't know character ID {ids[0]}", file=sys.stderr)
+        return {}
+    names = {}
+    for char_id in ids:
+        names.update(_names(session, [char_id], sleep))
     return names
 
 
@@ -87,3 +108,17 @@ def post_or_edit(session, webhook_url, payload, message_id, sleep=time.sleep):
 
 def send(session, webhook_url, payload, sleep=time.sleep):
     _request(session, "POST", webhook_url.rstrip("/"), "Discord post", sleep, json=payload)
+
+
+def send_all(session, webhook_url, payloads, sleep=time.sleep):
+    """Post each payload ~1 s apart; a failed post is logged and skipped. Returns the failure count."""
+    failures = 0
+    for i, payload in enumerate(payloads):
+        if i:
+            sleep(1)
+        try:
+            send(session, webhook_url, payload, sleep)
+        except requests.RequestException as e:
+            print(f"warning: {e}", file=sys.stderr)
+            failures += 1
+    return failures

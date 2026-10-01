@@ -36,17 +36,25 @@ def _counts(slim, config, start, end):
     return True
 
 
+def _counted(slims, config):
+    start, end = _parse_time(config["start"]), _parse_time(config["end"])
+    return [s for s in slims.values() if s["chars"] and _counts(s, config, start, end)]
+
+
+def count_mails(slims, config):
+    """Number of killmails that earn killmarks."""
+    return len(_counted(slims, config))
+
+
 def count_killmarks(slims, config):
     """Return {character_id: killmarks} after rules, disqualifications and adjustments."""
-    start, end = _parse_time(config["start"]), _parse_time(config["end"])
     counts = {}
-    for slim in slims.values():
-        if _counts(slim, config, start, end):
-            for char in slim["chars"]:
-                counts[char] = counts.get(char, 0) + 1
+    for slim in _counted(slims, config):
+        for char in slim["chars"]:
+            counts[char] = counts.get(char, 0) + 1
 
     for char_id, delta in config["adjustments"].items():
-        counts[int(char_id)] = counts.get(int(char_id), 0) + delta
+        counts[int(char_id)] = counts.get(int(char_id), 0) + int(delta)
     for char_id in config["disqualified"]:
         counts.pop(int(char_id), None)
     return {c: n for c, n in counts.items() if n > 0}

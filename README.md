@@ -23,8 +23,12 @@ detected automatically — that's leadership's review, using `data/leaderboard.c
 1. **Create a Discord webhook:** Channel settings → Integrations → Webhooks →
    New Webhook → pick the leaderboard channel → **Copy Webhook URL**.
    Treat this URL like a password.
-2. **Create a GitHub repository** (private is fine — the schedule uses about
-   1,500 of the 2,000 free Actions minutes per month) and push this folder:
+2. **Create a GitHub repository** and push this folder. A **public** repo gets
+   unlimited free Actions minutes (everything in it is public zKillboard data
+   anyway, plus the blue list). A **private** repo works too, but the 30-minute
+   schedule uses roughly 1,500 of the 2,000 free minutes per month — if you go
+   private, check *Settings → Billing* mid-month, and change the cron in
+   `.github/workflows/tracker.yml` to `"0 * * * *"` (hourly) if it's running low.
    ```bash
    git remote add origin https://github.com/<you>/<repo>.git
    git push -u origin main
@@ -58,7 +62,10 @@ The full ranked list with zKillboard links is in **`data/leaderboard.csv`**
 
 ## When October is over
 
-Late October mails keep getting picked up for a few days. After prizes go out,
+Mails sometimes reach zKillboard hours late. Every 6 hours (and on every run
+after Oct 31) the tracker re-scans all of October to catch them; you can force
+one with **Actions → Killmark tracker → Run workflow → full**. Before handing
+out prizes, run one full scan and use that `leaderboard.csv`. After prizes go out,
 go to **Actions → Killmark tracker → ⋯ → Disable workflow**. The last
 leaderboard stays in Discord.
 

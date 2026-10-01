@@ -1,7 +1,7 @@
 import pytest
 import requests
 
-from sources import fetch_new_killmails, post_or_edit, send
+from sources import fetch_new_killmails, post_or_edit, resolve_names, send, send_all
 
 WEBHOOK = "https://discord.com/api/webhooks/1/token"
 
@@ -119,3 +119,38 @@ def test_errors_do_not_leak_webhook_token(session):
     with pytest.raises(requests.RequestException) as err:
         send(session, WEBHOOK, {"content": "x"}, sleep=no_sleep)
     assert "token" not in str(err.value)
+
+
+def test_full_sweep_finds_late_mail_behind_known_page():
+    session = FakeSession([
+        FakeResponse(body=[km(5), km(4)]),
+        FakeResponse(body=[km(3), km(2)]),
+        FakeResponse(body=[]),
+    ])
+    result = fetch_new_killmails(session, 98707560, {"5", "4", "2"}, sleep=no_sleep, full=True)
+    assert [m["killmail_id"] for m in result] == [3]
+    assert len(session.calls) == 3
+
+
+def test_max_pages_warns(capsys):
+    session = FakeSession([FakeResponse(body=[km(i)]) for i in range(10, 7, -1)])
+    result = fetch_new_killmails(session, 98707560, set(), sleep=no_sleep, max_pages=3)
+    assert len(result) == 3
+    assert "max_pages" in capsys.readouterr().err
+
+
+def test_resolve_names_skips_invalid_ids():
+    session = FakeSession([
+        FakeResponse(status=404, body={"error": "Ensure all IDs are valid before resolving."}),
+        FakeResponse(status=404),
+        FakeResponse(body=[{"id": 2115722344, "name": "Real Pilot", "category": "character"}]),
+    ])
+    assert resolve_names(session, [2115722344, 1], sleep=no_sleep) == {2115722344: "Real Pilot"}
+
+
+def test_send_all_paces_and_survives_failures():
+    sleeps = []
+    session = FakeSession([FakeResponse(status=400), FakeResponse(status=204)])
+    failures = send_all(session, WEBHOOK, [{"content": "a"}, {"content": "b"}], sleep=sleeps.append)
+    assert failures == 1
+    assert len(session.calls) == 2 and 1 in sleeps

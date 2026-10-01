@@ -32,13 +32,13 @@ def progress_line(rank, name, marks, tiers):
     return f"{head}{bar}{badge} · {target['marks'] - marks:,} to {target['emoji']}"
 
 
-def render_leaderboard(counts, names, config, now):
+def render_leaderboard(counts, names, config, now, mails=0):
     tiers = config["tiers"]
     if not counts:
         description = "No killmarks yet — undock! o7"
     else:
         reached = [sum(1 for m in counts.values() if m >= t["marks"]) for t in tiers]
-        summary = f"**{len(counts)}** pilots · " + " · ".join(
+        summary = f"**{len(counts)}** pilots · **{mails:,}** mails · " + " · ".join(
             f"{t['emoji']} {n}" for t, n in zip(tiers, reached)
         )
         ranked = _ranked(counts, names)
