@@ -1,7 +1,7 @@
 # ☠️ October Killmark Challenge Tracker
 
 Keeps a live leaderboard in Discord for the OPTM October Killmark Challenge.
-Every 30 minutes it pulls Optimistic Wasteland Inc. [OPTM.] kills from
+Every 15 minutes it pulls Optimistic Wasteland Inc. [OPTM.] kills from
 zKillboard, counts killmarks per character, and edits one leaderboard message
 in your channel. When a pilot crosses 🥉 200 / 🥈 500 / 🥇 1,000 it posts a short shout-out.
 
@@ -23,23 +23,38 @@ detected automatically — that's leadership's review, using `data/leaderboard.c
 1. **Create a Discord webhook:** Channel settings → Integrations → Webhooks →
    New Webhook → pick the leaderboard channel → **Copy Webhook URL**.
    Treat this URL like a password.
-2. **Create a GitHub repository** and push this folder. A **public** repo gets
-   unlimited free Actions minutes (everything in it is public zKillboard data
-   anyway, plus the blue list). A **private** repo works too, but the 30-minute
-   schedule uses roughly 1,500 of the 2,000 free minutes per month — if you go
-   private, check *Settings → Billing* mid-month, and change the cron in
-   `.github/workflows/tracker.yml` to `"0 * * * *"` (hourly) if it's running low.
+2. **Create a public GitHub repository** and push this folder. Public repos get
+   unlimited free Actions minutes, which the always-on updating needs (see
+   *How updating works*); a private repo would run out of free minutes in days.
+   Everything in it is public zKillboard data anyway, plus the blue list.
    ```bash
    git remote add origin https://github.com/<you>/<repo>.git
    git push -u origin main
    ```
 3. In the repo: **Settings → Secrets and variables → Actions → New repository secret**,
    name `DISCORD_WEBHOOK_URL`, value = the webhook URL.
-4. **Actions tab → Killmark tracker → Run workflow** once. The leaderboard message
-   appears in Discord; from then on it updates itself every ~30 minutes
-   (GitHub can delay scheduled runs by 5–15 minutes when it's busy).
+4. **Actions tab → Killmark tracker → Run workflow**, tick **loop**. The leaderboard
+   message appears in Discord and updates itself from then on.
 
 Tip: pin the leaderboard message in the channel.
+
+## How updating works
+
+GitHub only starts scheduled runs every few hours (the `*/30` cron is a wish, not a
+promise). So each scheduled run doesn't stop after one update: it updates, waits
+15 minutes, updates again, for about 5¾ hours (`scripts/update-loop.sh`). A run
+GitHub starts meanwhile waits in the queue and takes over when the current one
+ends, so updates keep coming every 15 minutes. Expect occasional gaps if GitHub
+starts nothing for more than 6 hours. Cancelled runs in the Actions list are normal:
+GitHub keeps only one waiting run and cancels the extras.
+
+Every round first pulls the latest repo state, so `config.json` edits apply from
+the next round on.
+
+**Manual runs** (*Actions → Killmark tracker → Run workflow*) do **one** update right
+away and don't wait for a running loop. Tick **loop** to start a 6-hour loop instead
+(it queues behind one that is already running), or **full** to re-scan all of
+October from zKillboard.
 
 ## For leadership: editing `config.json`
 

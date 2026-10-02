@@ -1,5 +1,8 @@
 name: Killmark tracker
 
+# GitHub only starts scheduled runs every few hours, so each scheduled run keeps
+# updating every 15 minutes for ~5h45m (see scripts/update-loop.sh). A run that
+# fires while another is active waits in the queue and takes over when it ends.
 on:
   schedule:
     - cron: "*/30 * * * *"
@@ -9,18 +12,22 @@ on:
         description: "Re-scan every zKillboard page (catches late-posted mails)"
         type: boolean
         default: false
+      loop:
+        description: "Keep updating every 15 min for ~6h (otherwise: one update right now)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
 
 concurrency:
-  group: killmark-tracker
+  group: ${{ (github.event_name == 'schedule' || inputs.loop) && 'killmark-loop' || 'killmark-once' }}
   cancel-in-progress: false
 
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 355
     steps:
       - uses: actions/checkout@v4
 
@@ -31,18 +38,12 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - run: python tracker.py ${{ inputs.full && '--full' || '' }}
+      - name: Update leaderboard
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-
-      - name: Save data
-        if: always()
+          LOOP: ${{ github.event_name == 'schedule' || inputs.loop }}
+          FULL: ${{ inputs.full && '--full' || '' }}
         run: |
-          if [ -n "$(git status --porcelain data)" ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898237+github-actions[bot]@users.noreply.github.com"
-            git add data
-            git commit -m "Update killmark data"
-            git pull --rebase
-            git push
-          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898237+github-actions[bot]@users.noreply.github.com"
+          bash scripts/update-loop.sh
